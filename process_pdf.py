@@ -8,7 +8,7 @@ from openpyxl.utils import get_column_letter
 from openpyxl.styles import Alignment, PatternFill
 from datetime import datetime
 import requests as req
-from tkinter import Tk, Frame, filedialog, Label, Entry, Button, StringVar
+from tkinter import Tk, Frame, filedialog, Label, Entry, Button, StringVar, ttk, messagebox
 from datetime import timedelta
 
 
@@ -165,129 +165,141 @@ def process_pdf(pdf_path):
             value_resumido["Outros"] = last_page_values[1]["Outros"]
             yield value, value_resumido
 
-def get_all_files(path):
+def get_all_files(path, progressbar, root):
+    
+    
     files = os.listdir(path)
-    files = [f for f in files if f.endswith(".pdf")]
+    files_end_pdf = [f for f in files if f.endswith(".pdf")]
+    progressbar["maximum"] = len(files_end_pdf)
+    files = [f for f in files_end_pdf if f.endswith(".pdf")]
     all_values = []
     all_values_resumidos = []
+    i = 1
     for file in files:
         for value, value_resumido in process_pdf(os.path.join(path, file)):
             if value["papel"] != "":
                 value["arquivo"] = file
                 value_resumido["arquivo"] = file
                 all_values.append(value)
-                all_values_resumidos.append(value_resumido)
+                all_values_resumidos.append(value_resumido)                
+                print(f"{i} Registros(s) processados...")
+                i+=1
+        progressbar["value"] += 1
+        root.update_idletasks()
+                
+                
+    progressbar["value"] = 0
     return all_values_resumidos
             
 
             
      
 
-def convert_to_xlsx(path, output):
-    pd.DataFrame(get_all_files(path)).to_excel(output, index=False)
-    wb = load_workbook(output)
-    ws = wb.active
-    ws.title = "Operações"
-    
-    fill = PatternFill(start_color="FFED7D31", end_color="FFED7D31", fill_type="solid")
-
-    ws.row_dimensions[1].height = 30
-    for row in ws.iter_rows(min_row=1, max_row=1, min_col=1, max_col=ws.max_column):
-        for cell in row:
-            cell.alignment = Alignment(horizontal='center', vertical='top', wrap_text=True)
-            cell.fill = fill
-            
-    last_col_letter = get_column_letter(ws.max_column)
-    for column in ws.iter_cols(min_col=5, max_col=17):
-        for cell in column:
-            cell.number_format = "R$ #,##0.00"
-    #coluna D em formato inteiro
-    for cell in ws["D"]:
-        cell.number_format = "0"
-    ws.auto_filter.ref = f"A1:{last_col_letter}1"
-    ws.column_dimensions['A'].width = 15
-    ws.column_dimensions['B'].width = 22
-    ws.column_dimensions['C'].width = 8
-    ws.column_dimensions['D'].width = 8
-    ws.column_dimensions['E'].width = 15
-    ws.column_dimensions['F'].width = 15
-    ws.column_dimensions['G'].width = 15
-    ws.column_dimensions['H'].width = 15
-    ws.column_dimensions['I'].width = 15
-    ws.column_dimensions['J'].width = 15
-    ws.column_dimensions['K'].width = 15
-    ws.column_dimensions['L'].width = 15
-    ws.column_dimensions['M'].width = 15
-    ws.column_dimensions['N'].width = 15
-    ws.column_dimensions['O'].width = 15
-    ws.column_dimensions['P'].width = 15
-    ws.column_dimensions['Q'].width = 15
-    ws.column_dimensions['R'].width = 15
-    ws.column_dimensions['S'].width = 15
-    ws.column_dimensions['T'].width = 15
-    ws.column_dimensions['U'].width = 15
-    ws.column_dimensions['V'].width = 15
-    ws.column_dimensions['W'].width = 15
-    ws.column_dimensions['X'].width = 15
-    for cell in ws["A"]:
-        cell.number_format = "dd/mm/yyyy"
+def convert_to_xlsx(path, output, progressbar=None, root=None, buttons=None, var_input=None, var_output=None):
+    if var_input.get() != "" and var_output.get() != "":
+        for button in buttons:
+            button["state"] = "disabled"
+        pd.DataFrame(get_all_files(path, progressbar, root)).to_excel(output, index=False)
+        wb = load_workbook(output)
+        ws = wb.active
+        ws.title = "Operações"
         
-    
-    
-    wb.save(output)
-    print("Processamento concluído.")   
-    
+        fill = PatternFill(start_color="FFED7D31", end_color="FFED7D31", fill_type="solid")
+
+        ws.row_dimensions[1].height = 30
+        for row in ws.iter_rows(min_row=1, max_row=1, min_col=1, max_col=ws.max_column):
+            for cell in row:
+                cell.alignment = Alignment(horizontal='center', vertical='top', wrap_text=True)
+                cell.fill = fill
+                
+        last_col_letter = get_column_letter(ws.max_column)
+        for column in ws.iter_cols(min_col=5, max_col=17):
+            for cell in column:
+                cell.number_format = "R$ #,##0.00"
+        #coluna D em formato inteiro
+        for cell in ws["D"]:
+            cell.number_format = "0"
+        ws.auto_filter.ref = f"A1:{last_col_letter}1"
+        ws.column_dimensions['A'].width = 15
+        ws.column_dimensions['B'].width = 22
+        ws.column_dimensions['C'].width = 8
+        ws.column_dimensions['D'].width = 8
+        ws.column_dimensions['E'].width = 15
+        ws.column_dimensions['F'].width = 15
+        ws.column_dimensions['G'].width = 15
+        ws.column_dimensions['H'].width = 15
+        ws.column_dimensions['I'].width = 15
+        ws.column_dimensions['J'].width = 15
+        ws.column_dimensions['K'].width = 15
+        ws.column_dimensions['L'].width = 15
+        ws.column_dimensions['M'].width = 15
+        ws.column_dimensions['N'].width = 15
+        ws.column_dimensions['O'].width = 15
+        ws.column_dimensions['P'].width = 15
+        ws.column_dimensions['Q'].width = 15
+        ws.column_dimensions['R'].width = 15
+        ws.column_dimensions['S'].width = 15
+        ws.column_dimensions['T'].width = 15
+        ws.column_dimensions['U'].width = 15
+        ws.column_dimensions['V'].width = 15
+        ws.column_dimensions['W'].width = 15
+        ws.column_dimensions['X'].width = 15
+        for cell in ws["A"]:
+            cell.number_format = "dd/mm/yyyy"
+            
+        
+        
+        wb.save(output)
+        for button in buttons:
+            button["state"] = "normal"
+        print("Processamento concluído.")
+       
+    else:
+        messagebox.showerror("Erro", "Selecione um diretório de entrada e um arquivo de saída.")
+              
 if __name__ == "__main__":
     
     PADX = 5
-    PADY = 1    
-    expiration = datetime.strptime("06/05/2024", "%d/%m/%Y")
-    expiration += timedelta(hours=12)
-    print(expiration)
-   
-    now = req.get("http://worldtimeapi.org/api/timezone/America/Sao_Paulo").json()["utc_datetime"]
-    now = datetime.fromisoformat(now).replace(tzinfo=None)
+    PADY = 2    
+    WIDTH = 400
+    HEIGTH = 250
+    root = Tk()
     
-    if expiration > now:
-        """
-        parser = argparse.ArgumentParser(description='Processa arquivos PDF.')
-        parser.add_argument('path', type=str, help='O caminho para os arquivos PDF.')
-        parser.add_argument('output', type=str, help='O caminho para o arquivo de saída.')
-        args = parser.parse_args()
-        """
-        root = Tk()
-        
-        #mudar o título da janela
-        root.title("Conversor de PDF para XLSX")
-        frame = Frame(root)
-        frame.pack(padx=25, pady=25)
-        label = Label(frame, text="Caminho dos arquivos PDF:")
-        label.grid(row=0, column=0, padx=PADX, pady=PADY, sticky="w")
-        
-        var_path = StringVar()
-        entry_path = Entry(frame, width=50, state="readonly", textvariable=var_path)
-        entry_path.grid(row=1, column=0, padx=PADX, pady=PADY)
-        button = Button(frame, text="...", command=lambda: var_path.set(filedialog.askdirectory()))
-        button.grid(row=1, column=1, padx=PADX, pady=PADY)
-        
-        Label(frame, text="Caminho do arquivo de saída:").grid(row=2, column=0, padx=PADX, pady=PADY, sticky="w")
-        var_output = StringVar()
-        entry_output = Entry(frame, width=50, state="readonly" ,textvariable=var_output)
-        entry_output.grid(row=3, column=0, padx=PADX, pady=PADY)
-        
-        button_output = Button(frame, text="...", command=lambda: var_output.set(filedialog.asksaveasfilename(defaultextension=".xlsx", filetypes=[("Arquivos Excel", "*.xlsx")])))
-        button_output.grid(row=3, column=1, padx=PADX, pady=PADY)
-        
-        
-        button_convert = Button(frame, text="Submeter", command=lambda: convert_to_xlsx(var_path.get(), var_output.get()))
-        button_convert.grid(row=4, column=0, padx=PADX, pady=(PADY*3, 0))
-        
-        
-        root.mainloop()
-        
-        
-        
-
-    else:
-        print("Licença expirada")
+    screen_width = root.winfo_screenwidth()
+    screen_height = root.winfo_screenheight()
+    x_cordinate = int((screen_width/2) - (WIDTH/2))
+    y_cordinate = int((screen_height/2) - (HEIGTH/2))
+    
+    root.geometry(f"{WIDTH}x{HEIGTH}+{x_cordinate}+{y_cordinate}")
+    root.title("Conversor de PDF para XLSX")
+    frame = Frame(root)
+    frame.pack(padx=25, pady=25)
+    label = Label(frame, text="Caminho dos arquivos PDF:")
+    label.grid(row=0, column=0, padx=PADX, pady=PADY, sticky="w")
+    
+    var_path = StringVar()
+    
+    entry_path = Entry(frame, width=50, state="readonly", textvariable=var_path)
+    entry_path.grid(row=1, column=0, padx=PADX, pady=PADY)
+    button_input = Button(frame, text="...", command=lambda: var_path.set(filedialog.askdirectory()))
+    button_input.grid(row=1, column=1, padx=PADX, pady=PADY)
+    
+    Label(frame, text="Caminho do arquivo de saída:").grid(row=2, column=0, padx=PADX, pady=PADY, sticky="w")
+    var_output = StringVar()
+    entry_output = Entry(frame, width=50, state="readonly" ,textvariable=var_output)
+    entry_output.grid(row=3, column=0, padx=PADX, pady=PADY)
+    
+    button_output = Button(frame, text="...", command=lambda: var_output.set(filedialog.asksaveasfilename(defaultextension=".xlsx", filetypes=[("Arquivos Excel", "*.xlsx")])))
+    button_output.grid(row=3, column=1, padx=PADX, pady=PADY)
+    
+    progressbar = ttk.Progressbar(frame, orient="horizontal", length=300, mode="determinate")
+    progressbar.grid(row=5, column=0, padx=PADX, pady=PADY*5)
+    button_convert = Button(frame, text="Submeter", command=lambda: convert_to_xlsx(var_path.get(), var_output.get(), progressbar, root, [button_output, button_input, button_convert], var_input=var_path, var_output=var_output))
+    button_convert.grid(row=4, column=0, padx=PADX, pady=(PADY*10, 0))
+    
+    
+    
+    root.mainloop()
+    
+    
     
